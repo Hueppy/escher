@@ -6,3 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bytemuck = "1.8.0"
+image = "0.24.0"
+nalgebra = { version = "*", features = ["bytemuck"] }
+rand = "0.8.5"
+tobj = { version = "3.2.1", features = ["async"] }
+vulkano = { version = "0.31.0", features = ["nalgebra"] }
+vulkano-shaders = "0.31.0"
+vulkano-win = "0.31.0"
+winit = "0.27.0"
