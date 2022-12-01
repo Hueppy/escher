@@ -3,8 +3,8 @@
 use std::{collections::HashMap, path::Path, time::Instant, f32::consts::PI};
 
 use engine::EngineBuilder;
-use mesh::Mesh;
-use nalgebra::{Matrix4, Vector3, Vector4, clamp};
+use mesh::{Mesh, Vertex};
+use nalgebra::{Matrix4, Vector3, Vector4, clamp, Vector2};
 use rand::Rng;
 use winit::event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
@@ -20,7 +20,7 @@ fn main() {
         .instance_with_required_extensions()
         .build();
 
-    let mesh = Mesh::from_obj(
+    let cube_mesh = Mesh::from_obj(
         include_str!("cube.obj"),
         &HashMap::from([(Path::new("cube.mtl"), include_str!("cube.mtl"))]),
     )
@@ -39,15 +39,46 @@ fn main() {
             engine.render_pass.clone(),
             engine.viewport.clone(),
         )
-        .create_object("cube", mesh, engine.device.clone())
+        .create_object("cube", cube_mesh, engine.device.clone())
         .create_instance("0").update(|instance| {
-            instance.position = Vector3::new(-1.0, 0.5, 0.5);
+            instance.position = Vector3::new(-1.0, -1.0, 0.0);
             instance.scale = 0.5;
         });
+
+    let plane_mesh = Mesh {
+        vertices: vec![
+            Vertex { coord: Vector3::new(-1.0, -1.0,  0.0), normal: Vector3::new(0.0, 0.0, -1.0), tex_coord: Vector2::new(0.0, 0.0) },
+            Vertex { coord: Vector3::new(-1.0,  1.0,  0.0), normal: Vector3::new(0.0, 0.0, -1.0), tex_coord: Vector2::new(0.0, 0.0) },
+            Vertex { coord: Vector3::new( 1.0,  1.0,  0.0), normal: Vector3::new(0.0, 0.0, -1.0), tex_coord: Vector2::new(0.0, 0.0) },
+            Vertex { coord: Vector3::new( 1.0, -1.0,  0.0), normal: Vector3::new(0.0, 0.0, -1.0), tex_coord: Vector2::new(0.0, 0.0) },
+        ],
+        indices: vec![
+            0, 1, 2,
+            0, 2, 3
+        ],
+    };
+
+    engine
+        .scene
+        .create_group(
+            "raymarch",
+            engine.device.clone(),
+            crate::shader::raymarch::vertex::load(engine.device.clone()).unwrap(),
+            crate::shader::raymarch::fragment::load(engine.device.clone()).unwrap(),
+            engine.render_pass.clone(),
+            engine.viewport.clone()
+        )
+        .create_object("plane", plane_mesh, engine.device.clone())
+        .create_instance("0")
+        .update(|instance| {
+            instance.position = Vector3::new(1.0, -1.0, 0.0);
+            instance.scale = 0.5;
+        });
+        
     engine
         .scene
         .get_camera()
-        .update(|configuration| configuration.position.z -= 2.0);
+        .update(|configuration| configuration.position = Vector3::new(1.0, -0.5, -2.0));
 
     let mut ids = vec![];
 
